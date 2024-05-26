@@ -51,19 +51,57 @@ export const signup = async (req, res) => {
             res.status(400).json({ error: "Invalid user data." });
         }
     } catch (error) {
-        console.log("Error in signup controller", error.message);
+        console.log("Error in signup controller: ", error.message);
         res.status(500).json({ error: "Internal server error." });
     }
 }
 
 export const login = async (req, res) => {
-    res.json({
-        data: "you hit the login endpoint",
-    });
+    try {
+        const { username, password } = req.body;
+
+        const user = await User.findOne({ username: username });
+        const validPassword = await bcrypt.compare(password, user?.password || "");
+
+        if (!user || !validPassword) {
+            return res.status(400).json({ error: "Invalid username or password." });
+        }
+
+        generateTokenandsetCookie(user._id, res);
+
+        res.status(201).json({
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            username: user.username,
+            followers: user.followers,
+            following: user.following,
+            profileImg: user.profileImg,
+            coverImg: user.coverImg,
+        });
+    } catch (error) {
+        console.log("Error in login controller: ", error.message);
+        res.status(500).json({ error: "Internal server error." });
+    }
 }
 
 export const logout = async (req, res) => {
-    res.json({
-        data: "you hit the logout endpoint",
-    });
+    try {
+        res.cookie("jwt", "", { maxAge: 0 });
+        res.status(200).json({ message: "logged out successfully." })
+    } catch (error) {
+        console.log("Error in logout controller: ", error.message);
+        res.status(500).json({ error: "Internal server error." });
+    }
+}
+
+export const checkAuth = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select("-password");
+        res.status(200).json(user);
+
+    } catch (error) {
+        console.log("Error in checkAuth controller: ", error.message);
+        res.status(500).json({ error: "Internal server error." });
+    }
 }
