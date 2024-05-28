@@ -95,6 +95,7 @@ export const logout = async (req, res) => {
     }
 }
 
+//we'll get the user from jwt
 export const checkAuth = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select("-password");
