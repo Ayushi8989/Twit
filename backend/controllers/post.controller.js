@@ -1,6 +1,6 @@
 import post from "../models/post.model.js";
 import User from "../models/user.model.js";
-import {v2} from "cloudinary"; 
+import { v2 } from "cloudinary";
 
 export const createPost = async (req, res) => {
     const { text, image } = req.body;
@@ -109,5 +109,18 @@ export const deletePost = async (req, res) => {
         res.status(200).json({ message: "Post deleted successfully" });
     } catch (error) {
         res.status(500).json({ error: "An error occurred while deleting the post" });
+    }
+};
+
+export const allPosts = async (req, res) => {
+    try {
+        const posts = await post.find().sort({ createdAt: -1 }).populate({ path: "user", select: "-password" }).populate({ path: "comments.user", select: "-password" });
+        if (posts.length === 0) {
+            return res.status(200).json([]);
+        }
+        res.status(200).json(posts);
+    } catch (error) {
+        console.log("Error in allPosts controller: ", error.message);
+        res.status(500).json({ error: "Internal server error." });
     }
 };
